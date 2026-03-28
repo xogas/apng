@@ -97,7 +97,7 @@ fdAT: uint32 seq_num + IDAT 数据（去掉 seq_num 后等同于 IDAT）
 ### 类型设计原则
 
 - **`APNG.Width`/`Height`** 使用 `uint32`：画布尺寸直接映射 IHDR 的 `uint32` 字段，类型本身排除负值，序列化时零转换
-- **`Frame.X`/`Y`**（偏移量）使用 `int`：参与 `image.Rectangle` 坐标运算（标准库坐标系），减少类型转换
+- **`Frame.XOffset`/`YOffset`**（偏移量）使用 `int`：参与 `image.Rectangle` 坐标运算（标准库坐标系），减少类型转换
 - `LoopCount` 使用 `uint32`：`0` = 无限循环，语义明确；直接映射 acTL 二进制字段
 - 移除 `NewAPNG`/`NewFrame` 构造函数，Go 惯用结构体字面量初始化
 - 移除 `CanvasSize()` 方法，改为 `Width`/`Height` 直接字段（编码时为 0 则自动推算）
@@ -181,8 +181,8 @@ type Frame struct {
     // Image 是本帧的像素内容，坐标系以自身左上角为原点 (0,0)。
     Image image.Image
 
-    // X/Y 是帧左上角在画布坐标系中的偏移，必须 >= 0。
-    X, Y int
+    // XOffset/YOffset 是帧左上角在画布坐标系中的偏移，必须 >= 0。
+    XOffset, YOffset int
 
     // DelayNum/DelayDen 是帧延迟的分子/分母（单位：秒）。
     // DelayDen 为 0 时等价于 100；即 DelayNum/100 秒。
@@ -196,7 +196,7 @@ type Frame struct {
 }
 
 // Bounds 返回本帧在画布坐标系中占据的矩形区域。
-// 等价于 image.Rect(f.X, f.Y, f.X+f.Image.Bounds().Dx(), f.Y+f.Image.Bounds().Dy())。
+// 等价于 image.Rect(f.XOffset, f.YOffset, f.XOffset+f.Image.Bounds().Dx(), f.YOffset+f.Image.Bounds().Dy())。
 // 若 f.Image 为 nil，返回空矩形。
 func (f *Frame) Bounds() image.Rectangle
 
